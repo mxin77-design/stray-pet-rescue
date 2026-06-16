@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>后台｜流浪猫狗线索</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; background: #fff8ef; color: #3d322b; line-height: 1.6; }
+    .wrap { width: min(1180px, calc(100% - 28px)); margin: 0 auto; padding: 28px 0; }
+    header { display: flex; justify-content: space-between; gap: 16px; align-items: center; margin-bottom: 20px; }
+    h1 { margin: 0; font-size: clamp(1.7rem, 4vw, 2.6rem); }
+    a, button { border: 0; border-radius: 999px; padding: 10px 16px; background: #f28b64; color: #fff; font-weight: 800; text-decoration: none; cursor: pointer; }
+    .panel { background: rgba(255,255,255,.86); border: 1px solid rgba(93,72,58,.13); border-radius: 22px; padding: 18px; box-shadow: 0 12px 30px rgba(93,72,58,.08); margin-bottom: 16px; }
+    .toolbar { display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; align-items: end; }
+    label { display: grid; gap: 6px; color: #766a62; font-weight: 800; }
+    input { width: 100%; border: 1px solid rgba(93,72,58,.16); border-radius: 14px; padding: 11px 12px; font: inherit; }
+    .status { color: #766a62; margin-top: 12px; }
+    .cards { display: grid; gap: 14px; }
+    .card { background: #fff; border: 1px solid rgba(93,72,58,.13); border-radius: 20px; padding: 16px; }
+    .card h3 { margin: 0 0 8px; }
+    .meta { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+    .tag { border-radius: 999px; padding: 5px 9px; background: rgba(131,197,190,.18); color: #3f7770; font-size: .86rem; font-weight: 800; }
+    .urgent { background: rgba(242,139,100,.16); color: #a3492b; }
+    dl { display: grid; grid-template-columns: 96px 1fr; gap: 6px 10px; margin: 0; }
+    dt { color: #766a62; font-weight: 800; }
+    dd { margin: 0; word-break: break-word; }
+    .empty { text-align: center; color: #766a62; padding: 38px; }
+    @media (max-width: 720px) { header, .toolbar { grid-template-columns: 1fr; display: grid; } dl { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>流浪猫狗线索后台</h1>
+      <a href="/">返回填写页</a>
+    </header>
+
+    <section class="panel">
+      <div class="toolbar">
+        <label>后台访问口令<input id="token" type="password" placeholder="默认开发口令：change-me" /></label>
+        <label>筛选关键词<input id="keyword" placeholder="城市、区域、动物类型、描述关键词" /></label>
+        <button id="loadBtn">加载记录</button>
+      </div>
+      <p class="status" id="status">请输入后台口令后加载。部署时请设置环境变量 ADMIN_TOKEN。</p>
+    </section>
+
+    <main class="cards" id="cards"></main>
+  </div>
+
+  <script>
+    const tokenInput = document.getElementById('token');
+    const keywordInput = document.getElementById('keyword');
+    const statusEl = document.getElementById('status');
+    const cardsEl = document.getElementById('cards');
+    const loadBtn = document.getElementById('loadBtn');
+    tokenInput.value = localStorage.getItem('adminToken') || '';
+
+    function escapeHtml(value) {
+      return String(value || '').replace(/[&<>"]/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[s]));
+    }
+
+    function render(items) {
+      if (!items.length) {
+        cardsEl.innerHTML = '<div class="panel empty">暂无记录或筛选后无结果。</div>';
+        return;
+      }
+      cardsEl.innerHTML = items.map(item => `
+        <article class="card">
+          <h3>${escapeHtml(item.animalType)}｜${escapeHtml(item.city)} ${escapeHtml(item.district)}</h3>
+          <div class="meta">
+            <span class="tag urgent">${escapeHtml(item.urgency)}</span>
+            <span class="tag">编号：${escapeHtml(item.id)}</span>
+            <span class="tag">提交：${escapeHtml(new Date(item.createdAt).toLocaleString())}</span>
+          </div>
+          <dl>
+            <dt>详细位置</dt><dd>${escapeHtml(item.location)}</dd>
+            <dt>看到时间</dt><dd>${escapeHtml(item.seenAt)}</dd>
+            <dt>描述</dt><dd>${escapeHtml(item.description)}</dd>
+            <dt>图片链接</dt><dd>${item.mediaUrl ? `<a href="${escapeHtml(item.mediaUrl)}" target="_blank" rel="noopener">${escapeHtml(item.mediaUrl)}</a>` : '无'}</dd>
+            <dt>提交者</dt><dd>${escapeHtml(item.contactName)}</dd>
+            <dt>联系方式</dt><dd>${escapeHtml(item.contactInfo)}</dd>
+          </dl>
+        </article>
+      `).join('');
+    }
+
+    async function loadReports() {
+      const token = tokenInput.value.trim();
+      localStorage.setItem('adminToken', token);
+      statusEl.textContent = '正在加载……';
+      try {
+        const keyword = keywordInput.value.trim();
+        const response = await fetch('/api/reports?keyword=' + encodeURIComponent(keyword), {
+          headers: { 'x-admin-token': token }
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.error || '加载失败');
+        statusEl.textContent = `共 ${data.items.length} 条记录。`;
+        render(data.items);
+      } catch (error) {
+        statusEl.textContent = '加载失败：口令不正确，或后台服务未启动。';
+        cardsEl.innerHTML = '';
+      }
+    }
+
+    loadBtn.addEventListener('click', loadReports);
+    keywordInput.addEventListener('keydown', event => { if (event.key === 'Enter') loadReports(); });
+  </script>
+</body>
+</html>

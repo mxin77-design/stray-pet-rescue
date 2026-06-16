@@ -1,0 +1,12 @@
+{
+  "name": "stray-pet-report-page",
+  "version": "1.0.0",
+  "private": true,
+  "description": "同城流浪猫狗线索收集网页与简易后台",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
