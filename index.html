@@ -125,6 +125,40 @@
     input:focus, select:focus, textarea:focus { border-color: rgba(242,139,100,.78); box-shadow: 0 0 0 4px rgba(242,139,100,.12); }
     textarea { min-height: 118px; resize: vertical; }
     .full { grid-column: 1 / -1; }
+    .upload-card {
+      padding: 14px;
+      border-radius: 18px;
+      background: rgba(255, 248, 239, 0.88);
+      border: 1px dashed rgba(217, 106, 68, 0.28);
+    }
+    .field-help {
+      color: var(--muted);
+      font-weight: 600;
+      font-size: .84rem;
+    }
+    .upload-status {
+      min-height: 1.5em;
+      color: var(--muted);
+      font-weight: 700;
+      font-size: .9rem;
+    }
+    .upload-status.ok { color: #356d66; }
+    .upload-status.err { color: #a3492b; }
+    .preview {
+      display: none;
+      margin-top: 10px;
+      border-radius: 18px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      background: #fff;
+      max-width: 280px;
+    }
+    .preview img {
+      width: 100%;
+      display: block;
+      aspect-ratio: 4 / 3;
+      object-fit: cover;
+    }
     .status { display: none; padding: 12px 14px; border-radius: 16px; font-weight: 800; }
     .status.ok { background: rgba(131,197,190,.2); color: #356d66; }
     .status.err { background: rgba(242,139,100,.16); color: #a3492b; }
@@ -272,7 +306,7 @@
             <h3>填写小提示</h3>
             <ul class="tip-list">
               <li>📍 位置越具体越好：门牌、路口、店铺、小区入口、地标。</li>
-              <li>📷 如果有照片，可先上传到网盘/图床/群相册，再填写图片链接。</li>
+              <li>📷 现在可以直接选图片上传，也可以继续手动粘贴已有图片链接。</li>
               <li>🕒 写清楚看到它的时间，以及它是否经常出现。</li>
               <li>⚠️ 不要为了拍照追赶、惊吓或徒手抓受伤动物。</li>
             </ul>
@@ -289,7 +323,16 @@
                 <label>动物类型<select name="animalType" required><option value="">请选择</option><option>流浪猫</option><option>流浪狗</option><option>猫狗都有</option><option>不确定</option></select></label>
                 <label>紧急程度<select name="urgency" required><option value="">请选择</option><option>紧急：受伤/被困/幼崽/极端天气</option><option>较急：疑似生病/怀孕/走失</option><option>普通：长期出没/需要绝育</option><option>仅记录：暂不紧急</option></select></label>
                 <label>看到时间<input name="seenAt" placeholder="例如：今天上午 9 点 / 每晚出现" /></label>
-                <label>图片或视频链接<input name="mediaUrl" placeholder="可选：网盘、图床、群相册链接" /></label>
+                <label class="full upload-card">上传现场图片
+                  <input id="mediaFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif" />
+                  <span class="field-help">选择后会自动压缩并上传到 Supabase Storage，建议单张图片 5MB 内。</span>
+                  <span class="upload-status" id="uploadStatus">还没有选择图片。图片是可选项。</span>
+                  <span class="preview" id="previewWrap"><img id="previewImage" alt="上传预览" /></span>
+                </label>
+                <label class="full">图片链接
+                  <input id="mediaUrl" name="mediaUrl" placeholder="可选：也可以直接粘贴网盘、图床、群相册链接" />
+                  <span class="field-help">如果你直接上传图片，这里会自动填入生成好的链接。</span>
+                </label>
                 <label>你的称呼<input name="contactName" placeholder="例如：王同学" required /></label>
                 <label>联系方式<input name="contactInfo" placeholder="电话 / 微信 / 邮箱" required /></label>
                 <label class="full">情况描述<textarea name="description" placeholder="请描述数量、颜色、大小、是否受伤、是否亲人、现场环境等" required></textarea></label>
@@ -313,11 +356,133 @@
     const errMsg = document.getElementById('errMsg');
     const submitBtn = document.getElementById('submitBtn');
     const shareBtn = document.getElementById('shareBtn');
+    const mediaFileInput = document.getElementById('mediaFile');
+    const mediaUrlInput = document.getElementById('mediaUrl');
+    const uploadStatus = document.getElementById('uploadStatus');
+    const previewWrap = document.getElementById('previewWrap');
+    const previewImage = document.getElementById('previewImage');
+    const MAX_DIMENSION = 1600;
+    const MAX_RAW_FILE_BYTES = 12 * 1024 * 1024;
+    let uploadInFlight = false;
 
     function showStatus(type, text) {
       okMsg.style.display = type === 'ok' ? 'block' : 'none';
       errMsg.style.display = type === 'err' ? 'block' : 'none';
       (type === 'ok' ? okMsg : errMsg).textContent = text;
+    }
+
+    function setUploadMessage(text, type = '') {
+      uploadStatus.textContent = text;
+      uploadStatus.className = 'upload-status' + (type ? ' ' + type : '');
+    }
+
+    function fileToDataUrl(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ''));
+        reader.onerror = () => reject(new Error('读取图片失败，请重试'));
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function dataUrlToBase64(dataUrl) {
+      return String(dataUrl || '').split(',')[1] || '';
+    }
+
+    function loadImage(dataUrl) {
+      return new Promise((resolve, reject) => {
+        const image = new Image();
+        image.onload = () => resolve(image);
+        image.onerror = () => reject(new Error('图片格式暂时无法识别，请换一张试试'));
+        image.src = dataUrl;
+      });
+    }
+
+    function canvasToBlob(canvas, type, quality) {
+      return new Promise((resolve, reject) => {
+        canvas.toBlob(blob => {
+          if (!blob) {
+            reject(new Error('压缩图片失败，请换一张图再试'));
+            return;
+          }
+          resolve(blob);
+        }, type, quality);
+      });
+    }
+
+    async function prepareUploadFile(file) {
+      if (!file) throw new Error('请先选择图片');
+      if (!file.type.startsWith('image/')) throw new Error('只能上传图片文件');
+      if (file.size > MAX_RAW_FILE_BYTES) throw new Error('原图太大，请先压缩到 12MB 内再上传');
+
+      if (file.type === 'image/gif') {
+        const dataUrl = await fileToDataUrl(file);
+        return {
+          fileName: file.name || 'pet-photo.gif',
+          contentType: 'image/gif',
+          previewUrl: dataUrl,
+          dataBase64: dataUrlToBase64(dataUrl)
+        };
+      }
+
+      const sourceUrl = await fileToDataUrl(file);
+      const image = await loadImage(sourceUrl);
+      const scale = Math.min(1, MAX_DIMENSION / Math.max(image.width, image.height));
+      const width = Math.max(1, Math.round(image.width * scale));
+      const height = Math.max(1, Math.round(image.height * scale));
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const context = canvas.getContext('2d');
+      context.drawImage(image, 0, 0, width, height);
+
+      const blob = await canvasToBlob(canvas, 'image/jpeg', 0.82);
+      const compressedUrl = await fileToDataUrl(blob);
+      const baseName = (file.name || 'pet-photo').replace(/\.[^.]+$/, '');
+      return {
+        fileName: baseName + '.jpg',
+        contentType: 'image/jpeg',
+        previewUrl: compressedUrl,
+        dataBase64: dataUrlToBase64(compressedUrl)
+      };
+    }
+
+    async function uploadSelectedImage(file) {
+      uploadInFlight = true;
+      submitBtn.disabled = true;
+      setUploadMessage('正在压缩并上传图片……');
+      showStatus('ok', '正在上传图片，请稍候……');
+
+      try {
+        const prepared = await prepareUploadFile(file);
+        previewImage.src = prepared.previewUrl;
+        previewWrap.style.display = 'block';
+
+        const response = await fetch('/api/uploads', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fileName: prepared.fileName,
+            contentType: prepared.contentType,
+            dataBase64: prepared.dataBase64
+          })
+        });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(result.error || '上传失败');
+
+        mediaUrlInput.value = result.url || '';
+        setUploadMessage('图片上传成功，提交时会自动带上这张图。', 'ok');
+        showStatus('ok', '图片已上传完成，现在可以继续提交整条线索。');
+      } catch (error) {
+        mediaUrlInput.value = '';
+        previewWrap.style.display = 'none';
+        previewImage.removeAttribute('src');
+        setUploadMessage(error.message || '上传失败，请稍后再试', 'err');
+        showStatus('err', '图片上传失败：' + (error.message || '请稍后重试'));
+      } finally {
+        uploadInFlight = false;
+        submitBtn.disabled = false;
+      }
     }
 
     shareBtn.addEventListener('click', async () => {
@@ -331,8 +496,28 @@
       setTimeout(() => { shareBtn.textContent = '复制分享链接'; }, 1800);
     });
 
+    mediaFileInput.addEventListener('change', async () => {
+      const [file] = mediaFileInput.files || [];
+      if (!file) {
+        previewWrap.style.display = 'none';
+        previewImage.removeAttribute('src');
+        setUploadMessage('还没有选择图片。图片是可选项。');
+        return;
+      }
+      await uploadSelectedImage(file);
+    });
+
     form.addEventListener('submit', async (event) => {
       event.preventDefault();
+      if (uploadInFlight) {
+        showStatus('err', '图片还在上传，请稍候几秒再提交。');
+        return;
+      }
+      if (mediaFileInput.files.length && !mediaUrlInput.value.trim()) {
+        showStatus('err', '你已经选择了图片，但上传还没成功。请重新选择一次图片，或清空图片后再提交。');
+        return;
+      }
+
       showStatus('ok', '正在提交，请稍候……');
       submitBtn.disabled = true;
 
@@ -346,9 +531,12 @@
         const result = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error(result.error || '提交失败');
         form.reset();
+        previewWrap.style.display = 'none';
+        previewImage.removeAttribute('src');
+        setUploadMessage('还没有选择图片。图片是可选项。');
         showStatus('ok', `提交成功！记录编号：${result.id || '已保存'}。后台可以查看这条线索。`);
       } catch (error) {
-        showStatus('err', '提交失败：请确认网页是通过已部署的服务器地址打开，而不是直接双击 HTML 文件。');
+        showStatus('err', '提交失败：' + (error.message || '请确认网页是通过已部署的服务器地址打开，而不是直接双击 HTML 文件。'));
       } finally {
         submitBtn.disabled = false;
       }

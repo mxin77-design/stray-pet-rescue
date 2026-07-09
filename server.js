@@ -2,6 +2,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const { uploadBase64Image } = require('./storage-upload');
 
 const PORT = Number(process.env.PORT || 3000);
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN || 'change-me';
@@ -22,12 +23,12 @@ function send(res, status, body, headers = {}) {
   res.end(typeof body === 'string' ? body : JSON.stringify(body));
 }
 
-function readJsonBody(req) {
+function readJsonBody(req, maxBytes = 1024 * 1024) {
   return new Promise((resolve, reject) => {
     let raw = '';
     req.on('data', chunk => {
       raw += chunk;
-      if (raw.length > 1024 * 1024) {
+      if (Buffer.byteLength(raw, 'utf8') > maxBytes) {
         reject(new Error('请求内容过大'));
         req.destroy();
       }
@@ -150,6 +151,17 @@ const server = http.createServer(async (req, res) => {
       send(res, 201, { ok: true, id: report.id, item: toFrontend(report) });
     } catch (error) {
       send(res, 400, { error: error.message || '提交失败' });
+    }
+    return;
+  }
+
+  if (url.pathname === '/api/uploads' && req.method === 'POST') {
+    try {
+      const body = await readJsonBody(req, 10 * 1024 * 1024);
+      const result = await uploadBase64Image(body);
+      send(res, 201, { ok: true, url: result.publicUrl, path: result.path });
+    } catch (error) {
+      send(res, 400, { error: error.message || '上传失败' });
     }
     return;
   }
