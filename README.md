@@ -12,9 +12,9 @@ npm start
 - 后台页：http://localhost:3000/admin.html
 - 默认后台口令：`change-me`
 
-## 推荐部署：Vercel + Supabase（不需要 Render 外国卡）
+## 推荐部署：Netlify + Supabase（不需要 Render 外国卡）
 
-Vercel 负责发布网页和接口，Supabase 负责保存后台数据。
+Netlify 负责发布网页和接口，Supabase 负责保存后台数据。
 
 ### 1. 创建 Supabase 数据库
 
@@ -25,21 +25,24 @@ Vercel 负责发布网页和接口，Supabase 负责保存后台数据。
    - `Project URL`
    - `service_role key`
 
-### 2. 创建 Vercel 项目
+### 2. 创建 Netlify 项目
 
-1. 打开 Vercel，用 GitHub 登录。
-2. 选择本 GitHub 仓库导入。
-3. Framework Preset 选择 **Other**。
-4. 添加环境变量：
+1. 打开 Netlify，用 GitHub 登录。
+2. 选择 **Add new site** → **Import an existing project**。
+3. 选择 GitHub，并选择本仓库。
+4. Build command 留空，Publish directory 填 `.`。
+5. 添加环境变量：
    - `SUPABASE_URL`：Supabase 的 Project URL
    - `SUPABASE_SERVICE_ROLE_KEY`：Supabase 的 service_role key
    - `ADMIN_TOKEN`：你自己的后台口令
-5. 点击 Deploy。
+6. 点击 Deploy。
 
 部署完成后：
 
-- 填写页：`https://你的-vercel-地址/`
-- 后台页：`https://你的-vercel-地址/admin.html`
+- 填写页：`https://你的-netlify-地址/`
+- 后台页：`https://你的-netlify-地址/admin.html`
+
+Netlify 会把 `/api/reports` 转发到 `netlify/functions/reports.js`，前端代码不用修改。
 
 ## 备用部署：Render + Persistent Disk
 
