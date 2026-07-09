@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>公开救助列表｜流浪猫狗线索</title>
+  <style>
+    :root {
+      --bg: #fff8ef;
+      --card: rgba(255, 255, 255, 0.9);
+      --line: rgba(93, 72, 58, 0.13);
+      --text: #3d322b;
+      --muted: #766a62;
+      --primary: #f28b64;
+      --primary-dark: #d96a44;
+      --accent: #ffd166;
+      --green: #83c5be;
+      --shadow: 0 16px 40px rgba(93, 72, 58, 0.09);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      background:
+        radial-gradient(circle at left top, rgba(255, 209, 102, 0.24), transparent 24%),
+        radial-gradient(circle at right 20%, rgba(131, 197, 190, 0.18), transparent 30%),
+        var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    a { color: inherit; text-decoration: none; }
+    .container { width: min(1160px, calc(100% - 28px)); margin: 0 auto; }
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: rgba(255, 248, 239, 0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--line);
+    }
+    .nav {
+      min-height: 72px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+    }
+    .logo { display: flex; align-items: center; gap: 10px; font-weight: 900; font-size: 1.1rem; }
+    .logo-mark {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      box-shadow: 0 10px 22px rgba(242, 139, 100, 0.25);
+    }
+    .nav-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      padding: 11px 18px;
+      font-weight: 800;
+      border: 0;
+      cursor: pointer;
+      background: var(--primary);
+      color: #fff;
+      box-shadow: 0 10px 24px rgba(242, 139, 100, 0.22);
+    }
+    .btn.secondary {
+      background: #fff;
+      color: var(--primary-dark);
+      border: 1px solid rgba(217, 106, 68, 0.24);
+      box-shadow: none;
+    }
+
+    .hero { padding: 44px 0 26px; }
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap: 22px;
+      align-items: stretch;
+    }
+    .hero-card, .panel, .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 26px;
+      box-shadow: var(--shadow);
+    }
+    .hero-card {
+      padding: 28px;
+      background: linear-gradient(145deg, rgba(255,255,255,.96), rgba(255,243,220,.94));
+    }
+    .eyebrow {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 14px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(255,209,102,.3);
+      color: #8a5b1f;
+      font-weight: 800;
+      font-size: .92rem;
+    }
+    h1 { margin: 0 0 16px; font-size: clamp(2rem, 5vw, 3.7rem); line-height: 1.08; letter-spacing: -.05em; }
+    .hero-card p { margin: 0; color: var(--muted); font-size: 1.04rem; max-width: 720px; }
+    .hero-side {
+      padding: 24px;
+      display: grid;
+      gap: 12px;
+      align-content: start;
+    }
+    .hero-side strong { font-size: 1.14rem; }
+    .tips {
+      display: grid;
+      gap: 10px;
+      margin: 0;
+      padding: 0;
+    }
+    .tips li {
+      list-style: none;
+      background: rgba(255,248,239,.82);
+      border-radius: 16px;
+      padding: 12px 14px;
+      color: var(--muted);
+    }
+
+    .panel { padding: 18px; margin-bottom: 18px; }
+    .filters {
+      display: grid;
+      grid-template-columns: 1.3fr .8fr auto;
+      gap: 10px;
+      align-items: end;
+    }
+    label { display: grid; gap: 6px; color: var(--muted); font-weight: 800; }
+    input, select {
+      width: 100%;
+      border: 1px solid rgba(93,72,58,.16);
+      border-radius: 14px;
+      padding: 11px 12px;
+      font: inherit;
+      background: #fff;
+      color: var(--text);
+    }
+    .summary { color: var(--muted); margin-top: 12px; min-height: 1.6em; font-weight: 700; }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+      padding-bottom: 34px;
+    }
+    .card {
+      overflow: hidden;
+      display: grid;
+      grid-template-rows: 210px auto;
+    }
+    .image {
+      display: grid;
+      place-items: center;
+      background: linear-gradient(145deg, rgba(255, 223, 180, 0.95), rgba(255,255,255,.95));
+      color: #9d714f;
+      font-size: 4rem;
+      overflow: hidden;
+    }
+    .image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .content { padding: 18px; display: grid; gap: 10px; }
+    .meta, .foot { display: flex; flex-wrap: wrap; gap: 8px; }
+    .tag {
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: rgba(131,197,190,.18);
+      color: #3f7770;
+      font-size: .84rem;
+      font-weight: 800;
+    }
+    .status-tag { background: rgba(255,209,102,.3); color: #8a5b1f; }
+    .urgent-tag { background: rgba(242,139,100,.16); color: #a3492b; }
+    .content h2 { margin: 0; font-size: 1.24rem; line-height: 1.25; }
+    .desc { color: var(--muted); margin: 0; }
+    .location { color: #5c4e44; font-weight: 700; }
+    .empty { text-align: center; color: var(--muted); padding: 42px 18px; }
+
+    @media (max-width: 940px) {
+      .hero-grid, .cards { grid-template-columns: 1fr 1fr; }
+      .hero-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 640px) {
+      .nav, .filters, .cards { grid-template-columns: 1fr; }
+      .nav { display: grid; padding: 14px 0; }
+      .nav-actions { width: 100%; }
+      .btn { width: 100%; }
+      .cards { display: grid; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <nav class="container nav" aria-label="公开列表导航">
+      <a class="logo" href="/">
+        <span class="logo-mark">🐾</span>
+        <span>公开救助列表</span>
+      </a>
+      <div class="nav-actions">
+        <a class="btn secondary" href="/">返回首页</a>
+        <a class="btn" href="/#report">提交新线索</a>
+      </div>
+    </nav>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <div class="hero-grid">
+        <div class="hero-card">
+          <span class="eyebrow">🐾 让更多人直接看到需要帮助的小动物</span>
+          <h1>同城待帮助的小猫小狗，都集中在这里。</h1>
+          <p>你可以按状态和关键词筛选线索，快速找到待核实、待救助、寻主中或可领养的小猫小狗。每一条记录都来自前台提交，再由后台继续跟进和整理。</p>
+        </div>
+        <aside class="hero-side hero-card">
+          <strong>浏览提醒</strong>
+          <ul class="tips">
+            <li>优先关注“待救助”“救助中”的记录，帮助确认现场情况或转发给附近志愿者。</li>
+            <li>如果你愿意领养、寄养或帮助寻主，请先进入详情页确认时间、位置和描述。</li>
+            <li>公开列表默认不展示详细联系方式，避免敏感信息被随意传播。</li>
+          </ul>
+        </aside>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="filters">
+        <label>关键词
+          <input id="keyword" placeholder="城市、区域、动物类型、描述关键词" />
+        </label>
+        <label>状态
+          <select id="statusFilter">
+            <option value="">全部状态</option>
+            <option>待核实</option>
+            <option>待救助</option>
+            <option>救助中</option>
+            <option>寻主中</option>
+            <option>可领养</option>
+            <option>已安置</option>
+          </select>
+        </label>
+        <button class="btn" id="loadBtn" type="button">刷新列表</button>
+      </div>
+      <p class="summary" id="summary">正在加载公开记录……</p>
+    </section>
+
+    <section class="cards" id="cards"></section>
+  </main>
+
+  <script>
+    const cardsEl = document.getElementById('cards');
+    const keywordInput = document.getElementById('keyword');
+    const statusFilter = document.getElementById('statusFilter');
+    const summaryEl = document.getElementById('summary');
+    const loadBtn = document.getElementById('loadBtn');
+
+    function escapeHtml(value) {
+      return String(value || '').replace(/[&<>"]/g, s => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[s]));
+    }
+
+    function truncate(value, length = 82) {
+      const text = String(value || '').trim();
+      if (text.length <= length) return text;
+      return text.slice(0, length) + '…';
+    }
+
+    function imageMarkup(item) {
+      if (item.mediaUrl) {
+        return `<img src="${escapeHtml(item.mediaUrl)}" alt="${escapeHtml(item.animalType)}线索图片" loading="lazy" />`;
+      }
+      return item.animalType === '流浪狗' ? '🐶' : item.animalType === '猫狗都有' ? '🐱🐶' : '🐱';
+    }
+
+    function render(items) {
+      if (!items.length) {
+        cardsEl.innerHTML = '<div class="panel empty" style="grid-column: 1 / -1;">当前筛选条件下暂无公开记录。</div>';
+        return;
+      }
+
+      cardsEl.innerHTML = items.map(item => `
+        <a class="card" href="/pet.html?id=${encodeURIComponent(item.id)}">
+          <div class="image">${imageMarkup(item)}</div>
+          <div class="content">
+            <div class="meta">
+              <span class="tag status-tag">${escapeHtml(item.status || '待核实')}</span>
+              <span class="tag urgent-tag">${escapeHtml(item.urgency)}</span>
+            </div>
+            <h2>${escapeHtml(item.animalType)}｜${escapeHtml(item.city)} ${escapeHtml(item.district)}</h2>
+            <p class="location">📍 ${escapeHtml(item.location)}</p>
+            <p class="desc">${escapeHtml(truncate(item.description))}</p>
+            <div class="foot">
+              <span class="tag">看到时间：${escapeHtml(item.seenAt || '待补充')}</span>
+              <span class="tag">线索提供者：${escapeHtml(item.contactName || '匿名')}</span>
+            </div>
+          </div>
+        </a>
+      `).join('');
+    }
+
+    async function loadItems() {
+      summaryEl.textContent = '正在加载公开记录……';
+      try {
+        const params = new URLSearchParams({ public: '1' });
+        if (keywordInput.value.trim()) params.set('keyword', keywordInput.value.trim());
+        if (statusFilter.value.trim()) params.set('status', statusFilter.value.trim());
+
+        const response = await fetch('/api/reports?' + params.toString());
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.error || '加载失败');
+        summaryEl.textContent = `当前共找到 ${data.items.length} 条公开记录。`;
+        render(data.items);
+      } catch (error) {
+        summaryEl.textContent = '加载失败：' + (error.message || '请稍后重试');
+        cardsEl.innerHTML = '<div class="panel empty" style="grid-column: 1 / -1;">暂时无法加载公开列表，请稍后再试。</div>';
+      }
+    }
+
+    loadBtn.addEventListener('click', loadItems);
+    keywordInput.addEventListener('keydown', event => { if (event.key === 'Enter') loadItems(); });
+    statusFilter.addEventListener('change', loadItems);
+    loadItems();
+  </script>
+</body>
+</html>

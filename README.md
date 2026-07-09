@@ -9,6 +9,8 @@ npm start
 ```
 
 - 填写页：http://localhost:3000/
+- 公开列表：http://localhost:3000/pets.html
+- 公开详情：http://localhost:3000/pet.html?id=记录编号
 - 后台页：http://localhost:3000/admin.html
 - 默认后台口令：`change-me`
 
@@ -25,6 +27,8 @@ Netlify 负责发布网页和接口，Supabase 负责保存后台数据。
    - `Project URL`
    - `service_role key`
 
+如果你之前已经建过表，而且现在想启用“状态管理 / 公开列表状态筛选”，还需要再把 `supabase-upgrade-status.sql` 里的 SQL 复制到 SQL Editor 里执行一次。
+
 ### 2. 创建 Netlify 项目
 
 1. 打开 Netlify，用 GitHub 登录。
@@ -40,6 +44,8 @@ Netlify 负责发布网页和接口，Supabase 负责保存后台数据。
 部署完成后：
 
 - 填写页：`https://你的-netlify-地址/`
+- 公开列表：`https://你的-netlify-地址/pets.html`
+- 公开详情：`https://你的-netlify-地址/pet.html?id=记录编号`
 - 后台页：`https://你的-netlify-地址/admin.html`
 
 Netlify 会把 `/api/reports` 转发到 `netlify/functions/reports.js`，前端代码不用修改。

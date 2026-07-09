@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>救助详情｜流浪猫狗线索</title>
+  <style>
+    :root {
+      --bg: #fff8ef;
+      --card: rgba(255, 255, 255, 0.9);
+      --line: rgba(93, 72, 58, 0.13);
+      --text: #3d322b;
+      --muted: #766a62;
+      --primary: #f28b64;
+      --primary-dark: #d96a44;
+      --accent: #ffd166;
+      --shadow: 0 16px 40px rgba(93, 72, 58, 0.09);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      background:
+        radial-gradient(circle at left top, rgba(255, 209, 102, 0.22), transparent 24%),
+        radial-gradient(circle at right, rgba(131, 197, 190, 0.18), transparent 30%),
+        var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+    }
+
+    a { color: inherit; text-decoration: none; }
+    .container { width: min(1100px, calc(100% - 28px)); margin: 0 auto; }
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: rgba(255, 248, 239, 0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--line);
+    }
+    .nav {
+      min-height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .logo { display: flex; align-items: center; gap: 10px; font-weight: 900; font-size: 1.1rem; }
+    .logo-mark {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      box-shadow: 0 10px 22px rgba(242, 139, 100, 0.25);
+    }
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      padding: 11px 18px;
+      font-weight: 800;
+      border: 0;
+      cursor: pointer;
+      background: var(--primary);
+      color: #fff;
+      box-shadow: 0 10px 24px rgba(242, 139, 100, 0.22);
+    }
+    .btn.secondary {
+      background: #fff;
+      color: var(--primary-dark);
+      border: 1px solid rgba(217, 106, 68, 0.24);
+      box-shadow: none;
+    }
+
+    main { padding: 34px 0 42px; }
+    .layout {
+      display: grid;
+      grid-template-columns: 1.06fr .94fr;
+      gap: 20px;
+      align-items: start;
+    }
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .media {
+      min-height: 360px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(145deg, rgba(255, 223, 180, 0.96), rgba(255,255,255,.94));
+      color: #9d714f;
+      font-size: 6rem;
+    }
+    .media img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+    }
+    .content { padding: 24px; }
+    .eyebrow {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 14px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(255,209,102,.28);
+      color: #8a5b1f;
+      font-weight: 800;
+      font-size: .92rem;
+    }
+    h1 { margin: 0 0 14px; font-size: clamp(2rem, 4vw, 3.2rem); line-height: 1.1; letter-spacing: -.04em; }
+    .meta, .help-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+    .tag {
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: rgba(131,197,190,.18);
+      color: #3f7770;
+      font-size: .84rem;
+      font-weight: 800;
+    }
+    .status-tag { background: rgba(255,209,102,.3); color: #8a5b1f; }
+    .urgent-tag { background: rgba(242,139,100,.16); color: #a3492b; }
+    .description { margin: 0; color: var(--muted); font-size: 1.02rem; }
+    dl {
+      margin: 0;
+      display: grid;
+      grid-template-columns: 110px 1fr;
+      gap: 8px 12px;
+    }
+    dt { color: var(--muted); font-weight: 800; }
+    dd { margin: 0; }
+    .aside {
+      padding: 22px;
+      display: grid;
+      gap: 16px;
+      align-content: start;
+    }
+    .aside h2 { margin: 0; font-size: 1.3rem; }
+    .note {
+      padding: 14px 16px;
+      border-radius: 18px;
+      background: rgba(255,248,239,.82);
+      color: var(--muted);
+    }
+    .empty {
+      text-align: center;
+      color: var(--muted);
+      padding: 60px 20px;
+    }
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 640px) {
+      .nav { display: grid; grid-template-columns: 1fr; padding: 14px 0; }
+      .actions { width: 100%; }
+      .btn { width: 100%; }
+      dl { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <nav class="container nav" aria-label="详情导航">
+      <a class="logo" href="/pets.html">
+        <span class="logo-mark">🐾</span>
+        <span>救助详情</span>
+      </a>
+      <div class="actions">
+        <a class="btn secondary" href="/pets.html">返回公开列表</a>
+        <a class="btn" href="/#report">提交新线索</a>
+      </div>
+    </nav>
+  </header>
+
+  <main class="container">
+    <div id="app" class="empty">正在加载详情……</div>
+  </main>
+
+  <script>
+    function escapeHtml(value) {
+      return String(value || '').replace(/[&<>"]/g, s => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[s]));
+    }
+
+    function renderImage(item) {
+      if (item.mediaUrl) {
+        return `<img src="${escapeHtml(item.mediaUrl)}" alt="${escapeHtml(item.animalType)}线索图片" />`;
+      }
+      return item.animalType === '流浪狗' ? '🐶' : item.animalType === '猫狗都有' ? '🐱🐶' : '🐱';
+    }
+
+    async function loadItem() {
+      const app = document.getElementById('app');
+      const id = new URLSearchParams(location.search).get('id');
+      if (!id) {
+        app.className = 'empty';
+        app.textContent = '缺少记录编号，请从公开列表重新进入。';
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/reports?public=1&id=' + encodeURIComponent(id));
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.error || '加载失败');
+        const item = data.item;
+
+        document.title = `${item.animalType}｜${item.city}${item.district}｜救助详情`;
+        app.className = 'layout';
+        app.innerHTML = `
+          <section class="panel">
+            <div class="media">${renderImage(item)}</div>
+            <div class="content">
+              <span class="eyebrow">📍 同城救助详情</span>
+              <h1>${escapeHtml(item.animalType)}｜${escapeHtml(item.city)} ${escapeHtml(item.district)}</h1>
+              <div class="meta">
+                <span class="tag status-tag">${escapeHtml(item.status || '待核实')}</span>
+                <span class="tag urgent-tag">${escapeHtml(item.urgency)}</span>
+                <span class="tag">提交时间：${escapeHtml(new Date(item.createdAt).toLocaleString())}</span>
+              </div>
+              <p class="description">${escapeHtml(item.description)}</p>
+            </div>
+          </section>
+
+          <aside class="panel aside">
+            <div>
+              <h2>现场信息</h2>
+              <dl style="margin-top: 14px;">
+                <dt>城市/区域</dt><dd>${escapeHtml(item.city)} ${escapeHtml(item.district)}</dd>
+                <dt>详细位置</dt><dd>${escapeHtml(item.location)}</dd>
+                <dt>看到时间</dt><dd>${escapeHtml(item.seenAt || '待补充')}</dd>
+                <dt>线索提供者</dt><dd>${escapeHtml(item.contactName || '匿名')}</dd>
+              </dl>
+            </div>
+
+            <div>
+              <h2>建议协助方式</h2>
+              <div class="help-tags" style="margin-top: 14px;">
+                <span class="tag">确认现场</span>
+                <span class="tag">转发扩散</span>
+                <span class="tag">帮助寻主</span>
+                <span class="tag">关注领养</span>
+              </div>
+            </div>
+
+            <div class="note">
+              公开详情默认不直接展示详细联系方式，避免敏感信息被长期公开传播。如果你愿意帮助，请联系平台管理者或提交新的补充线索。
+            </div>
+
+            <div class="actions" style="margin-top: 4px;">
+              <a class="btn secondary" href="/pets.html">继续浏览其他记录</a>
+              <a class="btn" href="/#report">补充一条新线索</a>
+            </div>
+          </aside>
+        `;
+      } catch (error) {
+        app.className = 'empty';
+        app.textContent = '加载失败：' + (error.message || '请稍后重试');
+      }
+    }
+
+    loadItem();
+  </script>
+</body>
+</html>

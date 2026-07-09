@@ -5,6 +5,7 @@ create table if not exists public.stray_pet_reports (
   district text not null,
   location text not null,
   animal_type text not null,
+  status text not null default '待核实',
   urgency text not null,
   seen_at text,
   media_url text,
