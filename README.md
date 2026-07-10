@@ -14,7 +14,7 @@ npm start
 - 后台页：http://localhost:3000/admin.html
 - 默认后台口令：`change-me`
 
-## 推荐部署：Netlify + Supabase（不需要 Render 外国卡）
+## 推荐部署：Netlify + Supabase
 
 Netlify 负责发布网页和接口，Supabase 负责保存后台数据。
 
